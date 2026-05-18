@@ -15,6 +15,7 @@ constraintlayout = "2.2.1"
 navigationFragment = "2.9.8"
 navigationUi = "2.9.8"
 playServicesLocation = "21.3.0"
+googleServices = "4.4.4"
 
 [libraries]
 arsceneview = { module = "io.github.sceneview:arsceneview", version.ref = "arsceneview" }
@@ -37,4 +38,5 @@ play-services-location = { module = "com.google.android.gms:play-services-locati
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 

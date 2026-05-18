@@ -40,7 +40,8 @@
         <!-- Declarar que la app requiere ARCore -->
         <meta-data
             android:name="com.google.ar.core"
-            android:value="required" />
+            android:value="required"
+            tools:replace="android:value" />
 
         <activity
             android:name=".MainActivity"

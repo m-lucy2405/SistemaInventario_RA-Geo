@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace 'com.example.inventario_ra'
-    compileSdk 35
+    compileSdk 37
 
     defaultConfig {
         applicationId "com.example.inventario_ra"
         minSdk 24
-        targetSdk 35
+        targetSdk 37
         versionCode 1
         versionName "1.0"
 
@@ -32,8 +32,38 @@ dependencies {
     implementation libs.activity.ktx
     implementation libs.appcompat
     implementation libs.constraintlayout
+
+    // Material Design para la UI [cite: 25]
     implementation libs.material
+
     testImplementation libs.junit
     androidTestImplementation libs.espresso.core
     androidTestImplementation libs.ext.junit
+
+    // Firebase BoM (Bill of Materials) para asegurar compatibilidad de versiones
+    implementation platform(libs.firebase.bom) // Ultima Version del BoM
+    implementation libs.firebase.database // Para texto y stock [cite: 3, 11]
+    implementation libs.firebase.storage // Para imágenes y modelos 3D
+
+    // ARCore
+    implementation libs.core
+
+    // Sceneview (Librería recomendada para renderizado 3D y AR en Java)
+    implementation libs.arsceneview
+
+    // Google Play Services para Geolocalización (GPS)
+    implementation libs.play.services.location
+
+    //Motor de Descarga y Renderizado para IMG en Firebase y Material Desing
+    implementation libs.glide
+    annotationProcessor libs.compiler
+
+    //Flujo de Navegacion simple y Ordenado
+    implementation libs.navigation.fragment
+    implementation libs.navigation.ui
+
+
+
+
+
 }

@@ -1,4 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+   <item
+       android:id="@+id/home"
+       android:title="Home"
+       android:icon="@drawable/ic_home">
+
+   </item>
+    <item
+        android:id="@+id/inventario"
+        android:title="Inventario"
+        android:icon="@drawable/ic_inventario">
+
+    </item>
+    <item
+        android:id="@+id/registro"
+        android:title="Registrar"
+        android:icon="@drawable/ic_registro">
+
+    </item>
+
 
 </menu>

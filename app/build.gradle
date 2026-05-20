@@ -17,6 +17,10 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    buildFeatures {
+        viewBinding true
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -34,7 +38,7 @@ dependencies {
     implementation libs.appcompat
     implementation libs.constraintlayout
 
-    // Material Design para la UI [cite: 25]
+    // Material Design para la UI
     implementation libs.material
 
     testImplementation libs.junit
@@ -49,8 +53,11 @@ dependencies {
     // ARCore
     implementation libs.core
 
-    // Sceneview (Librería recomendada para renderizado 3D y AR en Java)
-    implementation libs.arsceneview
+    // Sceneview (Librería recomendada para renderizado 3D y AR en Java) - NO SE UTILIZARA
+    // implementation libs.arsceneview
+
+    implementation libs.arsceneformcomunity
+
 
     // Google Play Services para Geolocalización (GPS)
     implementation libs.play.services.location
@@ -62,9 +69,5 @@ dependencies {
     //Flujo de Navegacion simple y Ordenado
     implementation libs.navigation.fragment
     implementation libs.navigation.ui
-
-
-
-
 
 }

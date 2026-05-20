@@ -18,6 +18,8 @@ android {
     }
 
     buildFeatures {
+
+        // Formato CamelCase para evitar booilerplate (lineasinncesarias)
         viewBinding true
     }
 
@@ -53,9 +55,10 @@ dependencies {
     // ARCore
     implementation libs.core
 
-    // Sceneview (Librería recomendada para renderizado 3D y AR en Java) - NO SE UTILIZARA
+    // Sceneview - NO SE UTILIZARA
     // implementation libs.arsceneview
 
+    // Sceneform (Libreria Hecha por la Comunidad para renderizado 3D y AR en Java)
     implementation libs.arsceneformcomunity
 
 

@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "307207289258",
+    "firebase_url": "https://databaseinventariora-default-rtdb.firebaseio.com",
+    "project_id": "databaseinventariora",
+    "storage_bucket": "databaseinventariora.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:307207289258:android:db5fa3c94a6bf5d65853d3",
+        "android_client_info": {
+          "package_name": "com.example.inventario_ra"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBpSVxAhlLvm4Y8M1f9BI_J7bCrETFBOZY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

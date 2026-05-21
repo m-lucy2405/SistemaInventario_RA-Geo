@@ -45,13 +45,25 @@
 
         <activity
             android:name=".MainActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.MenuPrincipalActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.VisorArActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.AgregarProductoActivity"
+            android:exported="false"
+            android:label="Agregar Producto" />
 
     </application>
 

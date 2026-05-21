@@ -10,7 +10,7 @@ android {
     defaultConfig {
         applicationId "com.example.inventario_ra"
         minSdk 24
-        targetSdk 37
+        targetSdk 35
         versionCode 1
         versionName "1.0"
 
@@ -29,37 +29,47 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
+    }
+
+    packaging {
+        jniLibs {
+            // Requerido para compatibilidad con 16 KB en Android 15+
+            useLegacyPackaging = false
+        }
     }
 }
 
 dependencies {
     implementation libs.activity.ktx
     implementation libs.appcompat
+    implementation(libs.assets) {
+        exclude group: 'com.google.ar.sceneform', module: 'sceneform-base'
+        exclude group: 'com.google.ar.sceneform', module: 'core'
+    }
     implementation libs.constraintlayout
 
     // Material Design para la UI
     implementation libs.material
 
     testImplementation libs.junit
-    androidTestImplementation libs.espresso.core
     androidTestImplementation libs.ext.junit
+    androidTestImplementation libs.espresso.core
 
     // Firebase BoM (Bill of Materials) para asegurar compatibilidad de versiones
     implementation platform(libs.firebase.bom) // Ultima Version del BoM
+    implementation 'com.google.firebase:firebase-analytics'
     implementation libs.firebase.database // Para texto y stock [cite: 3, 11]
     implementation libs.firebase.storage // Para imágenes y modelos 3D
 
     // ARCore
     implementation libs.core
 
-    // Sceneview - NO SE UTILIZARA
-    // implementation libs.arsceneview
-
-    // Sceneform (Libreria Hecha por la Comunidad para renderizado 3D y AR en Java)
-    implementation libs.arsceneformcomunity
+    // SceneView (Libreria moderna para renderizado 3D y AR en Java/Kotlin - Compatible con 16 KB)
+    implementation libs.arsceneview
 
 
     // Google Play Services para Geolocalización (GPS)

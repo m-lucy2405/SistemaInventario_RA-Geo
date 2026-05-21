@@ -1,7 +1,7 @@
 [versions]
 agp = "9.2.1"
-# Version anteior arsceneview = "4.10.0"
-arsceneformcomunity = "1.23.0"
+arsceneview = "0.10.0"
+# arsceneformcomunity = "1.23.0"
 compiler = "5.0.7"
 core = "1.54.0"
 firebaseBom = "34.13.0"
@@ -17,10 +17,11 @@ navigationFragment = "2.9.8"
 navigationUi = "2.9.8"
 playServicesLocation = "21.3.0"
 googleServices = "4.4.4"
+assets = "1.17.1"
 
 [libraries]
-# arsceneview = { module = "io.github.sceneview:arsceneview", version.ref = "arsceneview" }
-arsceneformcomunity = { group = "com.gorisse.thomas.sceneform", name = "sceneform", version.ref = "arsceneformcomunity" }
+arsceneview = { module = "io.github.sceneview:arsceneview", version.ref = "arsceneview" }
+# arsceneformcomunity = { group = "com.gorisse.thomas.sceneform", name = "ux", version.ref = "arsceneformcomunity" }
 compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "compiler" }
 core = { module = "com.google.ar:core", version.ref = "core" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
@@ -37,6 +38,9 @@ constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayo
 navigation-ui = { module = "androidx.navigation:navigation-ui", version.ref = "navigationUi" }
 navigation-fragment = { module = "androidx.navigation:navigation-fragment", version.ref = "navigationFragment" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
+
+# noinspection Aligned16KB
+assets = { group = "com.google.ar.sceneform", name = "assets", version.ref = "assets" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

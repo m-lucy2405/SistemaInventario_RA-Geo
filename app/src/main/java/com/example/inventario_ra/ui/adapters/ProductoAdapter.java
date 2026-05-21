@@ -19,14 +19,20 @@ public class ProductoAdapter extends RecyclerView.Adapter<ProductoAdapter.Produc
 
     private final List<Productos> listaProductos;
     private final OnProductoClickListener listener;
+    private final OnProductoLongClickListener longListener;
 
     public interface OnProductoClickListener {
         void onProductoClick(Productos producto);
     }
 
-    public ProductoAdapter(List<Productos> listaProductos, OnProductoClickListener listener) {
+    public interface OnProductoLongClickListener {
+        void onProductoLongClick(Productos producto);
+    }
+
+    public ProductoAdapter(List<Productos> listaProductos, OnProductoClickListener listener, OnProductoLongClickListener longListener) {
         this.listaProductos = listaProductos;
         this.listener = listener;
+        this.longListener = longListener;
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -49,7 +55,7 @@ public class ProductoAdapter extends RecyclerView.Adapter<ProductoAdapter.Produc
     @Override
     public void onBindViewHolder(@NonNull ProductoViewHolder holder, int position) {
         Productos producto = listaProductos.get(position);
-        holder.bind(producto, listener);
+        holder.bind(producto, listener, longListener);
     }
 
     @Override
@@ -65,7 +71,7 @@ public class ProductoAdapter extends RecyclerView.Adapter<ProductoAdapter.Produc
             this.binding = binding;
         }
 
-        public void bind(final Productos producto, final OnProductoClickListener listener) {
+        public void bind(final Productos producto, final OnProductoClickListener listener, final OnProductoLongClickListener longListener) {
             binding.tvNombre.setText(producto.getNombre());
             binding.tvPrecio.setText(String.format(Locale.getDefault(), "$ %.2f", producto.getPrecio()));
             binding.tvStock.setText(String.format(Locale.getDefault(), "Stock: %d unidades", producto.getStock()));
@@ -89,6 +95,15 @@ public class ProductoAdapter extends RecyclerView.Adapter<ProductoAdapter.Produc
                 if (listener != null) {
                     listener.onProductoClick(producto);
                 }
+            });
+
+            // Listener de clic largo (Editar/Eliminar)
+            binding.getRoot().setOnLongClickListener(v -> {
+                if (longListener != null) {
+                    longListener.onProductoLongClick(producto);
+                    return true;
+                }
+                return false;
             });
         }
     }

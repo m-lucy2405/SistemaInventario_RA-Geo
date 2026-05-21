@@ -1,19 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="md_theme_primary">#00639B</color>
-    <color name="md_theme_onPrimary">#FFFFFF</color>
-    <color name="md_theme_primaryContainer">#CDE5FF</color>
+    <!-- Colores Primarios (Industrial Blue) -->
+    <color name="primary">#005DB4</color>
+    <color name="on_primary">#FFFFFF</color>
+    <color name="primary_container">#D6E3FF</color>
 
-    <color name="md_theme_secondary">#51606F</color>
-    <color name="md_theme_onSecondary">#FFFFFF</color>
+    <!-- Colores Secundarios (Technical Gray) -->
+    <color name="secondary">#535F70</color>
+    <color name="on_secondary">#FFFFFF</color>
 
-    <color name="md_theme_background">#FCFCFF</color>
-    <color name="md_theme_onBackground">#1A1C1E</color>
-    <color name="md_theme_surface">#F8F9FC</color>
-    <color name="md_theme_onSurface">#1A1C1E</color>
-    <color name="md_theme_surfaceVariant">#DEE3EB</color>
-    <color name="md_theme_onSurfaceVariant">#43474E</color>
+    <!-- Fondos y Superficies -->
+    <color name="background_app">#F2F4F7</color> <!-- Gris muy claro para contraste -->
+    <color name="surface">#FFFFFF</color>
+    <color name="on_surface">#1A1C1E</color>
+    <color name="surface_variant">#E0E2EC</color>
 
-    <color name="md_theme_error">#BA1A1A</color>
-    <color name="md_theme_onError">#FFFFFF</color>
+    <!-- Estados -->
+    <color name="error">#BA1A1A</color>
+    <color name="success">#2E7D32</color>
+
+    <!-- Legacy compatible naming -->
+    <color name="md_theme_primary">@color/primary</color>
+    <color name="md_theme_onPrimary">@color/on_primary</color>
+    <color name="md_theme_background">@color/background_app</color>
+    <color name="md_theme_surface">@color/surface</color>
 </resources>

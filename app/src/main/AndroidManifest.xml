@@ -56,6 +56,10 @@
             android:name=".ui.VisorArActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.EscanerArActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

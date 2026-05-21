@@ -20,13 +20,15 @@ import io.github.sceneview.ar.node.PlacementMode;
 import kotlin.Unit;
 
 /**
- * Controlador limpio para la visualización de modelos en Realidad Aumentada.
+ * Controlador para la visualización manual de modelos en Realidad Aumentada.
+ * Utiliza detección de planos (Plane Detection) para posicionar el producto seleccionado.
  */
 public class VisorArActivity extends AppCompatActivity {
 
     private ActivityVisorArBinding binding;
     private ArModelNode modelNode;
     private DatabaseReference mDatabase;
+    private boolean isModelPlaced = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,11 +51,12 @@ public class VisorArActivity extends AppCompatActivity {
             finish();
         }
 
-        // Listener para posicionar el modelo
+        // Listener para posicionar el modelo manualmente al tocar una superficie
         binding.arSceneView.setOnTapAr((hitResult, motionEvent) -> {
-            if (modelNode != null) {
-                modelNode.anchor();
-                Toast.makeText(this, "Producto anclado", Toast.LENGTH_SHORT).show();
+            if (!isModelPlaced && modelNode != null) {
+                modelNode.setAnchor(hitResult.createAnchor());
+                isModelPlaced = true;
+                Toast.makeText(this, "Producto posicionado en superficie", Toast.LENGTH_SHORT).show();
             }
             return Unit.INSTANCE;
         });
@@ -92,7 +95,7 @@ public class VisorArActivity extends AppCompatActivity {
         ARModelNodeLoader.cargarModelo(modelNode, producto.getModelo_3d_url(), new ARModelNodeLoader.ARModelLoaderCallback() {
             @Override
             public void onSuccess() {
-                // Modelo cargado exitosamente
+                // Modelo cargado exitosamente y listo para ser posicionado
             }
 
             @Override

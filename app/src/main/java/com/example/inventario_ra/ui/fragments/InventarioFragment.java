@@ -21,6 +21,7 @@ import com.example.inventario_ra.databinding.FragmentInventarioBinding;
 import com.example.inventario_ra.location.GPSManager;
 import com.example.inventario_ra.models.Productos;
 import com.example.inventario_ra.models.Sucursales;
+import com.example.inventario_ra.ui.EscanerArActivity;
 import com.example.inventario_ra.ui.VisorArActivity;
 import com.example.inventario_ra.ui.adapters.ProductoAdapter;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -60,6 +61,11 @@ public class InventarioFragment extends Fragment {
 
         configurarRecyclerView();
         iniciarFlujoGeolocalizacion();
+
+        binding.fabEscanerAr.setOnClickListener(v -> {
+            Intent intent = new Intent(requireActivity(), EscanerArActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void configurarRecyclerView() {

@@ -1,22 +1,27 @@
-package com.example.inventario_ra.ui;
+package com.example.inventario_ra.ui.fragments;
 
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.example.inventario_ra.databinding.ActivityMenuPrincipalBinding;
+import com.example.inventario_ra.databinding.FragmentInventarioBinding;
 import com.example.inventario_ra.location.GPSManager;
 import com.example.inventario_ra.models.Productos;
 import com.example.inventario_ra.models.Sucursales;
+import com.example.inventario_ra.ui.VisorArActivity;
 import com.example.inventario_ra.ui.adapters.ProductoAdapter;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.database.DataSnapshot;
@@ -29,9 +34,9 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MenuPrincipalActivity extends AppCompatActivity {
+public class InventarioFragment extends Fragment {
 
-    private ActivityMenuPrincipalBinding binding;
+    private FragmentInventarioBinding binding;
     private GPSManager gpsManager;
     private ProductoAdapter adapter;
     private DatabaseReference mDatabase;
@@ -39,51 +44,48 @@ public class MenuPrincipalActivity extends AppCompatActivity {
     private ValueEventListener productosListener;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1000;
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        binding = ActivityMenuPrincipalBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        binding = FragmentInventarioBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        gpsManager = new GPSManager(this);
+        gpsManager = new GPSManager(requireContext());
 
         configurarRecyclerView();
-
-        // Evento para agregar nuevo producto
-        binding.fabAgregar.setOnClickListener(v -> {
-            Intent intent = new Intent(MenuPrincipalActivity.this, AgregarProductoActivity.class);
-            startActivity(intent);
-        });
-
         iniciarFlujoGeolocalizacion();
     }
 
     private void configurarRecyclerView() {
-        binding.rvProductos.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new ProductoAdapter(new ArrayList<>(), 
-            producto -> {
-                Intent intent = new Intent(MenuPrincipalActivity.this, VisorArActivity.class);
-                intent.putExtra("PRODUCTO_ID", producto.getId());
-                startActivity(intent);
-            },
-            this::mostrarOpcionesProducto
+        binding.rvProductos.setLayoutManager(new LinearLayoutManager(requireContext()));
+        adapter = new ProductoAdapter(new ArrayList<>(),
+                producto -> {
+                    Intent intent = new Intent(requireActivity(), VisorArActivity.class);
+                    intent.putExtra("PRODUCTO_ID", producto.getId());
+                    startActivity(intent);
+                },
+                this::mostrarOpcionesProducto
         );
         binding.rvProductos.setAdapter(adapter);
     }
 
     private void mostrarOpcionesProducto(Productos producto) {
         String[] opciones = {"Editar", "Eliminar"};
-        new MaterialAlertDialogBuilder(this)
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(producto.getNombre())
                 .setItems(opciones, (dialog, which) -> {
                     if (which == 0) {
-                        // Editar
-                        Intent intent = new Intent(this, AgregarProductoActivity.class);
-                        intent.putExtra("PRODUCTO_ID_EDITAR", producto.getId());
-                        startActivity(intent);
+                        // Navegar al fragmento de agregar en modo edición
+                        Bundle bundle = new Bundle();
+                        bundle.putString("PRODUCTO_ID_EDITAR", producto.getId());
+                        Navigation.findNavController(requireView()).navigate(com.example.inventario_ra.R.id.action_inventario_to_agregar, bundle);
                     } else {
-                        // Eliminar
                         confirmarEliminacion(producto);
                     }
                 })
@@ -91,13 +93,13 @@ public class MenuPrincipalActivity extends AppCompatActivity {
     }
 
     private void confirmarEliminacion(Productos producto) {
-        new MaterialAlertDialogBuilder(this)
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Confirmar eliminación")
                 .setMessage("¿Estás seguro de que deseas eliminar este producto?")
                 .setPositiveButton("Eliminar", (dialog, which) -> {
                     mDatabase.child("productos").child(producto.getId()).removeValue()
-                            .addOnSuccessListener(aVoid -> Toast.makeText(this, "Producto eliminado", Toast.LENGTH_SHORT).show())
-                            .addOnFailureListener(e -> Toast.makeText(this, "Error al eliminar", Toast.LENGTH_SHORT).show());
+                            .addOnSuccessListener(aVoid -> Toast.makeText(requireContext(), "Producto eliminado", Toast.LENGTH_SHORT).show())
+                            .addOnFailureListener(e -> Toast.makeText(requireContext(), "Error al eliminar", Toast.LENGTH_SHORT).show());
                 })
                 .setNegativeButton("Cancelar", null)
                 .show();
@@ -115,8 +117,7 @@ public class MenuPrincipalActivity extends AppCompatActivity {
 
             @Override
             public void onPermissionNeeded() {
-                ActivityCompat.requestPermissions(MenuPrincipalActivity.this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                         LOCATION_PERMISSION_REQUEST_CODE);
             }
 
@@ -139,7 +140,7 @@ public class MenuPrincipalActivity extends AppCompatActivity {
                         s.setId(data.getKey());
                         if (gpsManager.estaEnRango(miUbicacion, s)) {
                             sucursalActual = s;
-                            break; // Encontramos la sucursal donde está el usuario
+                            break;
                         }
                     }
                 }
@@ -160,13 +161,11 @@ public class MenuPrincipalActivity extends AppCompatActivity {
     }
 
     private void cargarProductosDeSucursal(String sucursalId) {
-        // Limpiar listener previo si existe
         if (productosQuery != null && productosListener != null) {
             productosQuery.removeEventListener(productosListener);
         }
 
         productosQuery = mDatabase.child("productos").orderByChild("sucursal_id").equalTo(sucursalId);
-        
         productosListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -179,32 +178,26 @@ public class MenuPrincipalActivity extends AppCompatActivity {
                     }
                 }
 
-                binding.progressBar.setVisibility(View.GONE);
-                if (listaFiltrada.isEmpty()) {
-                    binding.tvMensaje.setText("No hay productos disponibles en esta sucursal.");
-                    binding.tvMensaje.setVisibility(View.VISIBLE);
-                    adapter.actualizarLista(new ArrayList<>());
-                } else {
-                    binding.tvMensaje.setVisibility(View.GONE);
-                    adapter.actualizarLista(listaFiltrada);
+                if (isAdded()) {
+                    binding.progressBar.setVisibility(View.GONE);
+                    if (listaFiltrada.isEmpty()) {
+                        binding.tvMensaje.setText("No hay productos disponibles en esta sucursal.");
+                        binding.tvMensaje.setVisibility(View.VISIBLE);
+                        adapter.actualizarLista(new ArrayList<>());
+                    } else {
+                        binding.tvMensaje.setVisibility(View.GONE);
+                        adapter.actualizarLista(listaFiltrada);
+                    }
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                mostrarError("Error al cargar productos: " + error.getMessage());
+                if (isAdded()) mostrarError("Error al cargar productos: " + error.getMessage());
             }
         };
 
         productosQuery.addValueEventListener(productosListener);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (productosQuery != null && productosListener != null) {
-            productosQuery.removeEventListener(productosListener);
-        }
     }
 
     private void mostrarError(String mensaje) {
@@ -217,11 +210,20 @@ public class MenuPrincipalActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                iniciarFlujoGeolocalizacion(); // Reintentamos después de pedir permisos
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                iniciarFlujoGeolocalizacion();
             } else {
-                mostrarError("Se requieren permisos de ubicacion para mostrar el catalogo cercano");
+                mostrarError("Se requieren permisos de ubicación para mostrar el catálogo cercano");
             }
         }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (productosQuery != null && productosListener != null) {
+            productosQuery.removeEventListener(productosListener);
+        }
+        binding = null;
     }
 }

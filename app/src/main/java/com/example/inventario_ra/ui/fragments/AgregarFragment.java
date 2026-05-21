@@ -1,18 +1,23 @@
-package com.example.inventario_ra.ui;
+package com.example.inventario_ra.ui.fragments;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
-import com.example.inventario_ra.databinding.ActivityAgregarProductoBinding;
+import com.example.inventario_ra.databinding.FragmentAgregarBinding;
 import com.example.inventario_ra.models.Productos;
 import com.example.inventario_ra.models.Sucursales;
 import com.google.firebase.database.DataSnapshot;
@@ -27,15 +32,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class AgregarProductoActivity extends AppCompatActivity {
+public class AgregarFragment extends Fragment {
 
-    private ActivityAgregarProductoBinding binding;
+    private FragmentAgregarBinding binding;
     private DatabaseReference mDatabase;
     private StorageReference mStorage;
-    
+
     private List<Sucursales> listaSucursales;
     private List<String> nombresSucursales;
-    
+
     private Uri uriImagen;
     private Uri uriModelo;
 
@@ -43,11 +48,10 @@ public class AgregarProductoActivity extends AppCompatActivity {
     private boolean esEdicion;
     private Productos productoAEditar;
 
-    // Launchers para selección de archivos
     private final ActivityResultLauncher<Intent> imagePickerLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
-                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
                     uriImagen = result.getData().getData();
                     binding.tvEstadoImagen.setText("Imagen seleccionada");
                 }
@@ -57,30 +61,37 @@ public class AgregarProductoActivity extends AppCompatActivity {
     private final ActivityResultLauncher<Intent> modelPickerLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
-                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
                     uriModelo = result.getData().getData();
                     binding.tvEstadoModelo.setText("Modelo 3D seleccionado");
                 }
             }
     );
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        binding = ActivityAgregarProductoBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        binding = FragmentAgregarBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mStorage = FirebaseStorage.getInstance().getReference();
-        
+
         listaSucursales = new ArrayList<>();
         nombresSucursales = new ArrayList<>();
 
-        // Detectar modo edición
-        idEditar = getIntent().getStringExtra("PRODUCTO_ID_EDITAR");
-        esEdicion = (idEditar != null);
+        if (getArguments() != null) {
+            idEditar = getArguments().getString("PRODUCTO_ID_EDITAR");
+            esEdicion = (idEditar != null);
+        }
 
         if (esEdicion) {
+            binding.tvTituloFormulario.setText("Actualizar Producto");
             binding.btnGuardar.setText("Actualizar Producto");
         }
 
@@ -105,20 +116,21 @@ public class AgregarProductoActivity extends AppCompatActivity {
                         nombresSucursales.add(sucursal.getNombre());
                     }
                 }
-                ArrayAdapter<String> adapter = new ArrayAdapter<>(AgregarProductoActivity.this,
-                        android.R.layout.simple_spinner_item, nombresSucursales);
-                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                binding.spinnerSucursal.setAdapter(adapter);
+                if (isAdded()) {
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
+                            android.R.layout.simple_spinner_item, nombresSucursales);
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    binding.spinnerSucursal.setAdapter(adapter);
 
-                // Si estamos editando, cargamos los datos después de tener las sucursales
-                if (esEdicion) {
-                    cargarDatosProducto();
+                    if (esEdicion) {
+                        cargarDatosProducto();
+                    }
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(AgregarProductoActivity.this, "Error al cargar sucursales", Toast.LENGTH_SHORT).show();
+                if (isAdded()) Toast.makeText(requireContext(), "Error al cargar sucursales", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -128,12 +140,12 @@ public class AgregarProductoActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 productoAEditar = snapshot.getValue(Productos.class);
-                if (productoAEditar != null) {
+                if (productoAEditar != null && isAdded()) {
                     binding.etNombre.setText(productoAEditar.getNombre());
                     binding.etDescripcion.setText(productoAEditar.getDescripcion());
                     binding.etPrecio.setText(String.valueOf(productoAEditar.getPrecio()));
                     binding.etStock.setText(String.valueOf(productoAEditar.getStock()));
-                    
+
                     if (productoAEditar.getImagen_ref_url() != null) {
                         binding.tvEstadoImagen.setText("Imagen actual cargada");
                     }
@@ -141,7 +153,6 @@ public class AgregarProductoActivity extends AppCompatActivity {
                         binding.tvEstadoModelo.setText("Modelo 3D actual cargado");
                     }
 
-                    // Seleccionar sucursal en el spinner
                     for (int i = 0; i < listaSucursales.size(); i++) {
                         if (listaSucursales.get(i).getId().equals(productoAEditar.getSucursal_id())) {
                             binding.spinnerSucursal.setSelection(i);
@@ -153,7 +164,7 @@ public class AgregarProductoActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(AgregarProductoActivity.this, "Error al cargar producto", Toast.LENGTH_SHORT).show();
+                if (isAdded()) Toast.makeText(requireContext(), "Error al cargar producto", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -166,7 +177,7 @@ public class AgregarProductoActivity extends AppCompatActivity {
 
     private void seleccionarModelo() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("*/*"); // Buscamos archivos .glb/.gltf
+        intent.setType("*/*");
         modelPickerLauncher.launch(intent);
     }
 
@@ -176,33 +187,26 @@ public class AgregarProductoActivity extends AppCompatActivity {
         String stockStr = binding.etStock.getText().toString().trim();
 
         if (nombre.isEmpty() || precioStr.isEmpty() || stockStr.isEmpty()) {
-            Toast.makeText(this, "Complete los campos obligatorios", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), "Complete los campos obligatorios", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Si es edición y no se cambiaron archivos, usamos los existentes
         if (esEdicion && uriImagen == null && uriModelo == null && productoAEditar != null) {
-            guardarEnDatabase(nombre, precioStr, stockStr, 
-                    productoAEditar.getImagen_ref_url(), 
+            guardarEnDatabase(nombre, precioStr, stockStr,
+                    productoAEditar.getImagen_ref_url(),
                     productoAEditar.getModelo_3d_url());
             return;
         }
 
-        // En creación o si se seleccionaron archivos nuevos en edición
         if (!esEdicion && (uriImagen == null || uriModelo == null)) {
-            Toast.makeText(this, "Debe seleccionar la imagen y el modelo 3D", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), "Debe seleccionar la imagen y el modelo 3D", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Si se seleccionó al menos un archivo nuevo o es creación, empezamos el flujo de subida
         if (uriImagen != null) {
             subirImagen(nombre, precioStr, stockStr);
         } else if (uriModelo != null) {
-            // Caso donde solo se cambió el modelo en edición
             subirModelo(nombre, precioStr, stockStr, productoAEditar.getImagen_ref_url());
-        } else {
-            // Este caso solo pasaría si se olvidó validar algo arriba
-            Toast.makeText(this, "Error en la selección de archivos", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -216,17 +220,20 @@ public class AgregarProductoActivity extends AppCompatActivity {
                 if (uriModelo != null) {
                     subirModelo(nombre, precioStr, stockStr, urlImagen.toString());
                 } else {
-                    // Si estamos editando y solo cambiamos imagen
                     guardarEnDatabase(nombre, precioStr, stockStr, urlImagen.toString(), productoAEditar.getModelo_3d_url());
                 }
             });
         }).addOnFailureListener(e -> {
             ocultarCarga();
-            Toast.makeText(this, "Fallo al subir imagen: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            if (isAdded()) Toast.makeText(requireContext(), "Fallo al subir imagen: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         });
     }
 
     private void subirModelo(String nombre, String precioStr, String stockStr, String urlImagen) {
+        if (!binding.btnGuardar.isEnabled()) {
+            binding.progressBar.setVisibility(View.VISIBLE);
+        }
+
         StorageReference fileRef = mStorage.child("productos_modelos/" + UUID.randomUUID().toString() + ".glb");
         fileRef.putFile(uriModelo).addOnSuccessListener(taskSnapshot -> {
             fileRef.getDownloadUrl().addOnSuccessListener(urlModelo -> {
@@ -234,43 +241,49 @@ public class AgregarProductoActivity extends AppCompatActivity {
             });
         }).addOnFailureListener(e -> {
             ocultarCarga();
-            Toast.makeText(this, "Fallo al subir modelo: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            if (isAdded()) Toast.makeText(requireContext(), "Fallo al subir modelo: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         });
     }
 
     private void guardarEnDatabase(String nombre, String precioStr, String stockStr, String urlImagen, String urlModelo) {
-        binding.progressBar.setVisibility(View.VISIBLE);
-        binding.btnGuardar.setEnabled(false);
-        
         String descripcion = binding.etDescripcion.getText().toString().trim();
         double precio = Double.parseDouble(precioStr);
         int stock = Integer.parseInt(stockStr);
-        
+
         int pos = binding.spinnerSucursal.getSelectedItemPosition();
         String sucursalId = listaSucursales.get(pos).getId();
 
-        // Si es edición usamos el ID existente, si no, generamos uno nuevo
         String finalId = esEdicion ? idEditar : mDatabase.child("productos").push().getKey();
-        
+
         Productos producto = new Productos(nombre, "", descripcion, precio, stock, urlImagen, urlModelo, "", sucursalId);
         producto.setId(finalId);
 
         if (finalId != null) {
             mDatabase.child("productos").child(finalId).setValue(producto)
-                .addOnSuccessListener(aVoid -> {
-                    String msg = esEdicion ? "Producto actualizado" : "Producto registrado exitosamente";
-                    Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-                    finish();
-                })
-                .addOnFailureListener(e -> {
-                    ocultarCarga();
-                    Toast.makeText(this, "Error final: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+                    .addOnSuccessListener(aVoid -> {
+                        if (isAdded()) {
+                            String msg = esEdicion ? "Producto actualizado" : "Producto registrado exitosamente";
+                            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+                            Navigation.findNavController(requireView()).popBackStack();
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        ocultarCarga();
+                        if (isAdded()) Toast.makeText(requireContext(), "Error final: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
         }
     }
 
     private void ocultarCarga() {
-        binding.progressBar.setVisibility(View.GONE);
-        binding.btnGuardar.setEnabled(true);
+        if (binding != null) {
+            binding.progressBar.setVisibility(View.GONE);
+            binding.btnGuardar.setEnabled(true);
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 }

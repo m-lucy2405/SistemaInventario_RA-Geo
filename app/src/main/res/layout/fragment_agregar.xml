@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.AgregarProductoActivity">
+    tools:context=".ui.fragments.AgregarFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -13,6 +13,7 @@
         android:padding="20dp">
 
         <TextView
+            android:id="@+id/tvTituloFormulario"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Registrar Nuevo Producto"

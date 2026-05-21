@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_inventario">
+
+    <fragment
+        android:id="@+id/nav_inventario"
+        android:name="com.example.inventario_ra.ui.fragments.InventarioFragment"
+        android:label="Inventario"
+        tools:layout="@layout/fragment_inventario">
+        <action
+            android:id="@+id/action_inventario_to_agregar"
+            app:destination="@id/nav_agregar" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_agregar"
+        android:name="com.example.inventario_ra.ui.fragments.AgregarFragment"
+        android:label="Agregar Producto"
+        tools:layout="@layout/fragment_agregar">
+        <argument
+            android:name="PRODUCTO_ID_EDITAR"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
+
+</navigation>

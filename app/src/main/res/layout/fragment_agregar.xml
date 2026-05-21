@@ -89,54 +89,45 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Multimedia del Producto:"
+            android:text="Recursos Digitales (AR/Foto)"
+            android:textColor="@color/primary"
             android:textStyle="bold"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="16dp"
             android:layout_marginBottom="8dp"/>
 
-        <LinearLayout
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSeleccionarImagen"
+            style="@style/Widget.Material3.Button.TonalButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSeleccionarImagen"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Imagen"
-                app:icon="@android:drawable/ic_menu_camera" />
-            <TextView
-                android:id="@+id/tvEstadoImagen"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:text="Ningún archivo seleccionado"
-                android:textSize="12sp"
-                android:layout_gravity="center_vertical" />
-        </LinearLayout>
+            android:text="Cargar Fotografía"
+            app:icon="@android:drawable/ic_menu_gallery" />
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/tvEstadoImagen"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="16dp">
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSeleccionarModelo"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Modelo 3D"
-                app:icon="@android:drawable/ic_menu_view" />
-            <TextView
-                android:id="@+id/tvEstadoModelo"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:text="Ningún archivo seleccionado"
-                android:textSize="12sp"
-                android:layout_gravity="center_vertical" />
-        </LinearLayout>
+            android:layout_marginBottom="12dp"
+            android:text="Ningún archivo seleccionado"
+            android:textSize="11sp"
+            android:textAlignment="center" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSeleccionarModelo"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Cargar Modelo 3D (.glb)"
+            app:icon="@android:drawable/ic_menu_view" />
+
+        <TextView
+            android:id="@+id/tvEstadoModelo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="Ningún archivo seleccionado"
+            android:textSize="11sp"
+            android:textAlignment="center" />
 
         <TextView
             android:layout_width="match_parent"

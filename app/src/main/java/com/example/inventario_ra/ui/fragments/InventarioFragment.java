@@ -82,9 +82,10 @@ public class InventarioFragment extends Fragment {
     }
 
     private void mostrarOpcionesProducto(Productos producto) {
-        String[] opciones = {"Editar", "Eliminar"};
+        String[] opciones = {"Editar Detalles", "Eliminar del Inventario"};
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(producto.getNombre())
+                .setIcon(android.R.drawable.ic_dialog_info)
                 .setItems(opciones, (dialog, which) -> {
                     if (which == 0) {
                         // Navegar al fragmento de agregar en modo edición
@@ -99,12 +100,13 @@ public class InventarioFragment extends Fragment {
     }
 
     private void confirmarEliminacion(Productos producto) {
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Confirmar eliminación")
-                .setMessage("¿Estás seguro de que deseas eliminar este producto?")
+        new MaterialAlertDialogBuilder(requireContext(), com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog_Centered)
+                .setTitle("¡Atención!")
+                .setMessage("¿Estás seguro de que deseas eliminar " + producto.getNombre() + "? Esta acción no se puede deshacer.")
+                .setIcon(android.R.drawable.ic_dialog_alert)
                 .setPositiveButton("Eliminar", (dialog, which) -> {
                     mDatabase.child("productos").child(producto.getId()).removeValue()
-                            .addOnSuccessListener(aVoid -> Toast.makeText(requireContext(), "Producto eliminado", Toast.LENGTH_SHORT).show())
+                            .addOnSuccessListener(aVoid -> Toast.makeText(requireContext(), "Inventario actualizado", Toast.LENGTH_SHORT).show())
                             .addOnFailureListener(e -> Toast.makeText(requireContext(), "Error al eliminar", Toast.LENGTH_SHORT).show());
                 })
                 .setNegativeButton("Cancelar", null)

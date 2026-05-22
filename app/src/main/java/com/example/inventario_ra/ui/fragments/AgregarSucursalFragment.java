@@ -112,6 +112,7 @@ public class AgregarSucursalFragment extends Fragment implements OnMapReadyCallb
                 Sucursales sucursal = snapshot.getValue(Sucursales.class);
                 if (sucursal != null) {
                     binding.etNombreSucursal.setText(sucursal.getNombre());
+                    binding.etDescripcionSucursal.setText(sucursal.getDescripcion());
                     binding.etLatitud.setText(String.valueOf(sucursal.getLatitud()));
                     binding.etLongitud.setText(String.valueOf(sucursal.getLongitud()));
                     binding.etRadio.setText(String.valueOf(sucursal.getRadio_metros()));
@@ -138,6 +139,7 @@ public class AgregarSucursalFragment extends Fragment implements OnMapReadyCallb
 
     private void validarYGuardar() {
         String nombre = binding.etNombreSucursal.getText().toString().trim();
+        String descripcion = binding.etDescripcionSucursal.getText().toString().trim();
         String latStr = binding.etLatitud.getText().toString().trim();
         String lonStr = binding.etLongitud.getText().toString().trim();
         String radioStr = binding.etRadio.getText().toString().trim();
@@ -152,13 +154,13 @@ public class AgregarSucursalFragment extends Fragment implements OnMapReadyCallb
             double longitud = Double.parseDouble(lonStr);
             int radio = Integer.parseInt(radioStr);
 
-            guardarEnFirebase(nombre, latitud, longitud, radio);
+            guardarEnFirebase(nombre, descripcion, latitud, longitud, radio);
         } catch (NumberFormatException e) {
             Toast.makeText(requireContext(), "Ingrese valores numéricos válidos", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void guardarEnFirebase(String nombre, double latitud, double longitud, int radio) {
+    private void guardarEnFirebase(String nombre, String descripcion, double latitud, double longitud, int radio) {
         binding.progressBar.setVisibility(View.VISIBLE);
         binding.btnGuardarSucursal.setEnabled(false);
 
@@ -173,7 +175,7 @@ public class AgregarSucursalFragment extends Fragment implements OnMapReadyCallb
             idFinal = "sucursal_" + nombreLimpio;
         }
 
-        Sucursales sucursal = new Sucursales(idFinal, nombre, latitud, longitud, radio, "");
+        Sucursales sucursal = new Sucursales(idFinal, nombre, latitud, longitud, radio, descripcion);
         
         if (idFinal != null) {
             mDatabase.child(idFinal).setValue(sucursal)

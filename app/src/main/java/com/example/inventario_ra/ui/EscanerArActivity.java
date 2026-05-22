@@ -36,15 +36,13 @@ import io.github.sceneview.ar.node.PlacementMode;
 import kotlin.Unit;
 
 /**
- * Escáner AR libre que identifica productos mediante marcadores físicos
- * y carga automáticamente sus modelos 3D desde Firebase.
+ * Escáner AR de alto rendimiento que utiliza IDs Semánticos para consultas O(1) en Firebase.
  */
 public class EscanerArActivity extends AppCompatActivity {
 
     private ActivityEscanerArBinding binding;
     private DatabaseReference mDatabase;
-    private Set<String> marcadoresProcesados;
-    private ArModelNode currentModelNode;
+    private Set<String> productosProcesados;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +51,7 @@ public class EscanerArActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         mDatabase = FirebaseDatabase.getInstance().getReference("productos");
-        marcadoresProcesados = new HashSet<>();
+        productosProcesados = new HashSet<>();
 
         configurarEscenaEscaner();
 
@@ -62,31 +60,30 @@ public class EscanerArActivity extends AppCompatActivity {
     }
 
     private void configurarEscenaEscaner() {
-        binding.arSceneView.getPlaneRenderer().setVisible(false); // No necesitamos planos para escaneo puro
+        binding.arSceneView.getPlaneRenderer().setVisible(false);
 
-        // Configuración de la base de datos de marcadores
         binding.arSceneView.configureSession((session, config) -> {
             AugmentedImageDatabase aid = new AugmentedImageDatabase(session);
             
-            // Arreglo de marcadores reales en assets
-            String[] marcadores = {
-                "prod_ferr_001_martillo_de_carpintero.jpg",
-                "prod_ferr_002_taladro.jpg",
-                "prod_ferr_003_Casco.jpg",
-                "prod_ferr_004_destornillador.jpg",
-                "prod_ferr_005_Llave_tubos.jpg",
-                "prod_ferr_006_escalera.jpg",
-                "prod_ferr_007_Llave_Ajustable.jpg"
-            };
-
-            for (String nombreFichero : marcadores) {
-                try (InputStream is = getAssets().open(nombreFichero)) {
-                    Bitmap bitmap = BitmapFactory.decodeStream(is);
-                    aid.addImage(nombreFichero, bitmap);
-                    Log.d("AR_SCANNER", "Marcador cargado: " + nombreFichero);
-                } catch (IOException e) {
-                    Log.e("AR_SCANNER", "Error cargando asset: " + nombreFichero);
+            try {
+                // Listar dinámicamente todos los archivos en assets
+                String[] files = getAssets().list("");
+                if (files != null) {
+                    for (String fileName : files) {
+                        // Filtrar solo imágenes compatibles
+                        if (fileName.toLowerCase().endsWith(".jpg") || fileName.toLowerCase().endsWith(".png")) {
+                            try (InputStream is = getAssets().open(fileName)) {
+                                Bitmap bitmap = BitmapFactory.decodeStream(is);
+                                aid.addImage(fileName, bitmap);
+                                Log.d("AR_SCANNER", "Marcador cargado dinámicamente: " + fileName);
+                            } catch (IOException e) {
+                                Log.e("AR_SCANNER", "Error abriendo asset: " + fileName);
+                            }
+                        }
+                    }
                 }
+            } catch (IOException e) {
+                Log.e("AR_SCANNER", "Error listando assets", e);
             }
 
             config.setAugmentedImageDatabase(aid);
@@ -99,74 +96,84 @@ public class EscanerArActivity extends AppCompatActivity {
         Collection<AugmentedImage> updatedImages = arFrame.getFrame().getUpdatedTrackables(AugmentedImage.class);
 
         for (AugmentedImage image : updatedImages) {
-            if (image.getTrackingState() == TrackingState.TRACKING) {
-                String nombreArchivo = image.getName();
+            String fileName = image.getName();
+            TrackingState state = image.getTrackingState();
+            
+            actualizarDebugStatus("Marcador: " + fileName + " [" + state + "]");
 
-                // Si la imagen ya está siendo procesada o mostrada, la omitimos
-                if (marcadoresProcesados.contains(nombreArchivo)) continue;
+            if (state == TrackingState.TRACKING) {
+                // Extraer el ID semántico (quitar extensión)
+                String productoId = fileName;
+                int dotIndex = fileName.lastIndexOf('.');
+                if (dotIndex > 0) {
+                    productoId = fileName.substring(0, dotIndex);
+                }
 
-                marcadoresProcesados.add(nombreArchivo);
-                buscarProductoYAnclar(image);
+                // Control de redundancia: consultar solo si no ha sido procesado
+                if (!productosProcesados.contains(productoId)) {
+                    actualizarDebugStatus("Detectado: " + productoId + ". Consultando Firebase...");
+                    productosProcesados.add(productoId);
+                    buscarProductoYAnclar(image, productoId);
+                }
             }
         }
         return Unit.INSTANCE;
     }
 
-    private void buscarProductoYAnclar(AugmentedImage image) {
-        // Limpiamos la extensión para buscar por nombre (ej: "taladro.jpg" -> "taladro")
-        String terminoBusqueda = image.getName();
-        if (terminoBusqueda.contains(".")) {
-            terminoBusqueda = terminoBusqueda.substring(0, terminoBusqueda.lastIndexOf("."));
-        }
+    private void actualizarDebugStatus(String mensaje) {
+        runOnUiThread(() -> {
+            if (binding != null) {
+                binding.tvDebugStatus.setText(mensaje);
+            }
+        });
+    }
 
-        final String nombreProducto = terminoBusqueda;
+    private void buscarProductoYAnclar(AugmentedImage image, String productoId) {
         binding.progressBar.setVisibility(View.VISIBLE);
 
-        // Consulta a Firebase por el nombre del producto
-        mDatabase.orderByChild("nombre").equalTo(nombreProducto)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        binding.progressBar.setVisibility(View.GONE);
-                        
-                        if (snapshot.exists() && snapshot.getChildrenCount() > 0) {
-                            // Obtenemos el primer producto que coincida
-                            for (DataSnapshot data : snapshot.getChildren()) {
-                                Productos producto = data.getValue(Productos.class);
-                                if (producto != null && producto.getModelo_3d_url() != null) {
-                                    crearNodoYAnclar(image, producto);
-                                    break;
-                                }
-                            }
-                        } else {
-                            Log.w("AR_SCANNER", "Producto no encontrado en Firebase: " + nombreProducto);
-                            marcadoresProcesados.remove(image.getName()); // Permitir reintento
-                        }
+        // Consulta Directa O(1) usando el ID Semántico
+        mDatabase.child(productoId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                binding.progressBar.setVisibility(View.GONE);
+                
+                if (snapshot.exists()) {
+                    actualizarDebugStatus("Producto " + productoId + " encontrado. Descargando 3D...");
+                    Productos producto = snapshot.getValue(Productos.class);
+                    if (producto != null && producto.getModelo_3d_url() != null) {
+                        producto.setId(snapshot.getKey()); // Asegurar el ID
+                        crearNodoYAnclar(image, producto);
                     }
+                } else {
+                    actualizarDebugStatus("ERROR: ID " + productoId + " no existe en Firebase");
+                    Log.w("AR_SCANNER", "ID de producto no encontrado en Firebase: " + productoId);
+                    // Opcional: remover de procesados para permitir reintento posterior si se desea
+                    // productosProcesados.remove(productoId);
+                }
+            }
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        binding.progressBar.setVisibility(View.GONE);
-                        marcadoresProcesados.remove(image.getName());
-                    }
-                });
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                binding.progressBar.setVisibility(View.GONE);
+                actualizarDebugStatus("ERROR Firebase: " + error.getMessage());
+                productosProcesados.remove(productoId);
+            }
+        });
     }
 
     private void crearNodoYAnclar(AugmentedImage image, Productos producto) {
-        // Creamos el nodo para este producto
         ArModelNode modelNode = new ArModelNode(binding.arSceneView.getEngine());
         modelNode.setPlacementMode(PlacementMode.BEST_AVAILABLE);
         
-        // Posicionamos el modelo en el centro de la imagen física
         Anchor anchor = image.createAnchor(image.getCenterPose());
         modelNode.setAnchor(anchor);
         
         binding.arSceneView.addChild(modelNode);
 
-        // Carga del modelo 3D
         ARModelNodeLoader.cargarModelo(modelNode, producto.getModelo_3d_url(), new ARModelNodeLoader.ARModelLoaderCallback() {
             @Override
             public void onSuccess() {
+                actualizarDebugStatus("Modelo de " + producto.getNombre() + " renderizado");
                 runOnUiThread(() -> 
                     Toast.makeText(EscanerArActivity.this, "Detectado: " + producto.getNombre(), Toast.LENGTH_SHORT).show()
                 );
@@ -174,9 +181,11 @@ public class EscanerArActivity extends AppCompatActivity {
 
             @Override
             public void onError(Exception error) {
+                actualizarDebugStatus("ERROR Renderizado: " + error.getMessage());
                 Log.e("AR_SCANNER", "Error cargando modelo de " + producto.getNombre());
                 binding.arSceneView.removeChild(modelNode);
-                marcadoresProcesados.remove(image.getName());
+                // Permitir reintento si falla la carga del modelo 3D
+                productosProcesados.remove(producto.getId());
             }
         });
     }

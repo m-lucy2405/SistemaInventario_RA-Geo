@@ -147,6 +147,7 @@ public class AgregarProductoFragment extends Fragment {
                     binding.etDescripcion.setText(productoAEditar.getDescripcion());
                     binding.etPrecio.setText(String.valueOf(productoAEditar.getPrecio()));
                     binding.etStock.setText(String.valueOf(productoAEditar.getStock()));
+                    binding.etUbicacionInterna.setText(productoAEditar.getUbicacion_interna());
 
                     if (productoAEditar.getImagen_ref_url() != null) {
                         binding.tvEstadoImagen.setText("Imagen actual cargada");
@@ -249,6 +250,7 @@ public class AgregarProductoFragment extends Fragment {
 
     private void guardarEnDatabase(String nombre, String precioStr, String stockStr, String urlImagen, String urlModelo) {
         String descripcion = binding.etDescripcion.getText().toString().trim();
+        String ubicacionInterna = binding.etUbicacionInterna.getText().toString().trim();
         double precio = Double.parseDouble(precioStr);
         int stock = Integer.parseInt(stockStr);
 
@@ -263,7 +265,7 @@ public class AgregarProductoFragment extends Fragment {
             finalId = String.format(Locale.getDefault(), "prod_ferr_%04d", randomNum);
         }
 
-        Productos producto = new Productos(nombre, "", descripcion, precio, stock, urlImagen, urlModelo, "", sucursalId);
+        Productos producto = new Productos(nombre, "", descripcion, precio, stock, urlImagen, urlModelo, ubicacionInterna, sucursalId);
         producto.setId(finalId);
 
         if (finalId != null) {

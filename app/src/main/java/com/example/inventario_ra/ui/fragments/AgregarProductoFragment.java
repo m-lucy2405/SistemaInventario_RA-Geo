@@ -30,6 +30,8 @@ import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Random;
 import java.util.UUID;
 
 public class AgregarProductoFragment extends Fragment {
@@ -253,7 +255,13 @@ public class AgregarProductoFragment extends Fragment {
         int pos = binding.spinnerSucursal.getSelectedItemPosition();
         String sucursalId = listaSucursales.get(pos).getId();
 
-        String finalId = esEdicion ? idEditar : mDatabase.child("productos").push().getKey();
+        String finalId;
+        if (esEdicion) {
+            finalId = idEditar;
+        } else {
+            int randomNum = new Random().nextInt(10000); // 0 a 9999
+            finalId = String.format(Locale.getDefault(), "prod_ferr_%04d", randomNum);
+        }
 
         Productos producto = new Productos(nombre, "", descripcion, precio, stock, urlImagen, urlModelo, "", sucursalId);
         producto.setId(finalId);

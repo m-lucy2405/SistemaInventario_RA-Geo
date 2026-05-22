@@ -82,6 +82,7 @@ public class InventarioFragment extends Fragment {
     }
 
     private void mostrarOpcionesProducto(Productos producto) {
+        if (!isAdded()) return;
         String[] opciones = {"Editar Detalles", "Eliminar del Inventario"};
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(producto.getNombre())
@@ -91,7 +92,7 @@ public class InventarioFragment extends Fragment {
                         // Navegar al fragmento de agregar en modo edición
                         Bundle bundle = new Bundle();
                         bundle.putString("PRODUCTO_ID_EDITAR", producto.getId());
-                        Navigation.findNavController(requireView()).navigate(com.example.inventario_ra.R.id.action_inventario_to_agregar, bundle);
+                        Navigation.findNavController(requireView()).navigate(com.example.inventario_ra.R.id.action_inventario_to_agregar_producto, bundle);
                     } else {
                         confirmarEliminacion(producto);
                     }
@@ -100,20 +101,30 @@ public class InventarioFragment extends Fragment {
     }
 
     private void confirmarEliminacion(Productos producto) {
+        if (!isAdded()) return;
         new MaterialAlertDialogBuilder(requireContext(), com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog_Centered)
                 .setTitle("¡Atención!")
                 .setMessage("¿Estás seguro de que deseas eliminar " + producto.getNombre() + "? Esta acción no se puede deshacer.")
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .setPositiveButton("Eliminar", (dialog, which) -> {
                     mDatabase.child("productos").child(producto.getId()).removeValue()
-                            .addOnSuccessListener(aVoid -> Toast.makeText(requireContext(), "Inventario actualizado", Toast.LENGTH_SHORT).show())
-                            .addOnFailureListener(e -> Toast.makeText(requireContext(), "Error al eliminar", Toast.LENGTH_SHORT).show());
+                            .addOnSuccessListener(aVoid -> {
+                                if (isAdded()) {
+                                    Toast.makeText(requireContext(), "Inventario actualizado", Toast.LENGTH_SHORT).show();
+                                }
+                            })
+                            .addOnFailureListener(e -> {
+                                if (isAdded()) {
+                                    Toast.makeText(requireContext(), "Error al eliminar", Toast.LENGTH_SHORT).show();
+                                }
+                            });
                 })
                 .setNegativeButton("Cancelar", null)
                 .show();
     }
 
     private void iniciarFlujoGeolocalizacion() {
+        if (binding == null) return;
         binding.progressBar.setVisibility(View.VISIBLE);
         binding.tvMensaje.setVisibility(View.GONE);
 
@@ -140,6 +151,8 @@ public class InventarioFragment extends Fragment {
         mDatabase.child("sucursales").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (binding == null) return;
+
                 Sucursales sucursalActual = null;
 
                 for (DataSnapshot data : snapshot.getChildren()) {
@@ -177,6 +190,8 @@ public class InventarioFragment extends Fragment {
         productosListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (binding == null) return;
+
                 List<Productos> listaFiltrada = new ArrayList<>();
                 for (DataSnapshot data : snapshot.getChildren()) {
                     Productos p = data.getValue(Productos.class);
@@ -186,22 +201,20 @@ public class InventarioFragment extends Fragment {
                     }
                 }
 
-                if (isAdded()) {
-                    binding.progressBar.setVisibility(View.GONE);
-                    if (listaFiltrada.isEmpty()) {
-                        binding.tvMensaje.setText("No hay productos disponibles en esta sucursal.");
-                        binding.tvMensaje.setVisibility(View.VISIBLE);
-                        adapter.actualizarLista(new ArrayList<>());
-                    } else {
-                        binding.tvMensaje.setVisibility(View.GONE);
-                        adapter.actualizarLista(listaFiltrada);
-                    }
+                binding.progressBar.setVisibility(View.GONE);
+                if (listaFiltrada.isEmpty()) {
+                    binding.tvMensaje.setText("No hay productos disponibles en esta sucursal.");
+                    binding.tvMensaje.setVisibility(View.VISIBLE);
+                    adapter.actualizarLista(new ArrayList<>());
+                } else {
+                    binding.tvMensaje.setVisibility(View.GONE);
+                    adapter.actualizarLista(listaFiltrada);
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                if (isAdded()) mostrarError("Error al cargar productos: " + error.getMessage());
+                mostrarError("Error al cargar productos: " + error.getMessage());
             }
         };
 
@@ -209,6 +222,7 @@ public class InventarioFragment extends Fragment {
     }
 
     private void mostrarError(String mensaje) {
+        if (binding == null) return;
         binding.progressBar.setVisibility(View.GONE);
         binding.tvMensaje.setText(mensaje);
         binding.tvMensaje.setVisibility(View.VISIBLE);

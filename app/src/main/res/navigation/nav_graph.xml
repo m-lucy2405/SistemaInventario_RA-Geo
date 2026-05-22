@@ -11,13 +11,35 @@
         android:label="Inventario"
         tools:layout="@layout/fragment_inventario">
         <action
-            android:id="@+id/action_inventario_to_agregar"
-            app:destination="@id/nav_agregar" />
+            android:id="@+id/action_inventario_to_agregar_producto"
+            app:destination="@id/nav_agregar_producto" />
     </fragment>
 
     <fragment
-        android:id="@+id/nav_agregar"
-        android:name="com.example.inventario_ra.ui.fragments.AgregarFragment"
+        android:id="@+id/nav_sucursales"
+        android:name="com.example.inventario_ra.ui.fragments.SucursalesFragment"
+        android:label="Sucursales"
+        tools:layout="@layout/fragment_sucursales">
+        <action
+            android:id="@+id/action_sucursales_to_agregar_sucursal"
+            app:destination="@id/nav_agregar_sucursal" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_agregar_sucursal"
+        android:name="com.example.inventario_ra.ui.fragments.AgregarSucursalFragment"
+        android:label="Gestionar Sucursal"
+        tools:layout="@layout/fragment_agregar_sucursal">
+        <argument
+            android:name="SUCURSAL_ID_EDITAR"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_agregar_producto"
+        android:name="com.example.inventario_ra.ui.fragments.AgregarProductoFragment"
         android:label="Agregar Producto"
         tools:layout="@layout/fragment_agregar">
         <argument

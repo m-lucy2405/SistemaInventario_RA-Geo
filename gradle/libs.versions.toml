@@ -18,6 +18,7 @@ navigationUi = "2.9.8"
 playServicesLocation = "21.3.0"
 googleServices = "4.4.4"
 assets = "1.17.1"
+playServicesMaps = "18.2.0"
 
 [libraries]
 arsceneview = { module = "io.github.sceneview:arsceneview", version.ref = "arsceneview" }
@@ -38,6 +39,7 @@ constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayo
 navigation-ui = { module = "androidx.navigation:navigation-ui", version.ref = "navigationUi" }
 navigation-fragment = { module = "androidx.navigation:navigation-fragment", version.ref = "navigationFragment" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
+play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
 
 # noinspection Aligned16KB
 assets = { group = "com.google.ar.sceneform", name = "assets", version.ref = "assets" }

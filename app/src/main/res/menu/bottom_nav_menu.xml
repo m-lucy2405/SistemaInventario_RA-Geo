@@ -5,7 +5,11 @@
         android:icon="@android:drawable/ic_menu_sort_by_size"
         android:title="Inventario" />
     <item
-        android:id="@+id/nav_agregar"
+        android:id="@+id/nav_sucursales"
+        android:icon="@android:drawable/ic_dialog_map"
+        android:title="Sucursales" />
+    <item
+        android:id="@+id/nav_agregar_producto"
         android:icon="@android:drawable/ic_input_add"
         android:title="Agregar" />
 </menu>

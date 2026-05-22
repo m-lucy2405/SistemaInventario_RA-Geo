@@ -74,6 +74,8 @@ dependencies {
 
     // Google Play Services para Geolocalización (GPS)
     implementation libs.play.services.location
+    implementation libs.play.services.maps
+
 
     //Motor de Descarga y Renderizado para IMG en Firebase y Material Desing
     implementation libs.glide

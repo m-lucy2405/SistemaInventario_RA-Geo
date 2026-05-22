@@ -2,6 +2,8 @@ package com.example.inventario_ra;
 
 import android.os.Bundle;
 
+import android.view.View;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
@@ -30,6 +32,15 @@ public class MainActivity extends AppCompatActivity {
             
             // Vincular el BottomNavigationView con el NavController
             NavigationUI.setupWithNavController(binding.bottomNavigation, navController);
+
+            // Listener para ocultar el BottomNavigationView en fragmentos específicos
+            navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
+                if (destination.getId() == R.id.nav_agregar_sucursal || destination.getId() == R.id.nav_agregar_producto) {
+                    binding.bottomNavigation.setVisibility(View.GONE);
+                } else {
+                    binding.bottomNavigation.setVisibility(View.VISIBLE);
+                }
+            });
         }
     }
 }

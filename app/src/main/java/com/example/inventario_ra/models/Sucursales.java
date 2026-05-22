@@ -3,8 +3,8 @@ package com.example.inventario_ra.models;
 public class Sucursales {
     private String id;
     private String nombre;
-    private double latitud;
-    private double longitud;
+    private Object latitud;
+    private Object longitud;
     private int radio_metros;
     private String descripcion;
 
@@ -12,7 +12,7 @@ public class Sucursales {
     public Sucursales() {
     }
 
-    public Sucursales(String id, String nombre, double latitud, double longitud, int radio_metros, String descripcion) {
+    public Sucursales(String id, String nombre, Object latitud, Object longitud, int radio_metros, String descripcion) {
         this.id = id;
         this.nombre = nombre;
         this.latitud = latitud;
@@ -39,18 +39,36 @@ public class Sucursales {
     }
 
     public double getLatitud() {
-        return latitud;
+        if (latitud instanceof String) {
+            try {
+                return Double.parseDouble((String) latitud);
+            } catch (NumberFormatException e) {
+                return 0.0;
+            }
+        } else if (latitud instanceof Number) {
+            return ((Number) latitud).doubleValue();
+        }
+        return 0.0;
     }
 
-    public void setLatitud(double latitud) {
+    public void setLatitud(Object latitud) {
         this.latitud = latitud;
     }
 
     public double getLongitud() {
-        return longitud;
+        if (longitud instanceof String) {
+            try {
+                return Double.parseDouble((String) longitud);
+            } catch (NumberFormatException e) {
+                return 0.0;
+            }
+        } else if (longitud instanceof Number) {
+            return ((Number) longitud).doubleValue();
+        }
+        return 0.0;
     }
 
-    public void setLongitud(double longitud) {
+    public void setLongitud(Object longitud) {
         this.longitud = longitud;
     }
 

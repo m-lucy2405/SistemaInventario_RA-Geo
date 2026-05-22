@@ -5,7 +5,7 @@ public class Productos {
     private String nombre;
     private String categoria;
     private String descripcion;
-    private double precio;
+    private Object precio;
     private int stock;
     private String imagen_ref_url;
     private String modelo_3d_url;
@@ -16,7 +16,7 @@ public class Productos {
     }
 
     // Constructor con parámetros (opcional, pero útil para crear productos desde la app)
-    public Productos(String nombre, String categoria, String descripcion, double precio,
+    public Productos(String nombre, String categoria, String descripcion, Object precio,
                     int stock, String imagen_ref_url, String modelo_3d_url,
                     String ubicacion_interna, String sucursal_id) {
         this.nombre = nombre;
@@ -64,10 +64,19 @@ public class Productos {
     }
 
     public double getPrecio() {
-        return precio;
+        if (precio instanceof String) {
+            try {
+                return Double.parseDouble((String) precio);
+            } catch (NumberFormatException e) {
+                return 0.0;
+            }
+        } else if (precio instanceof Number) {
+            return ((Number) precio).doubleValue();
+        }
+        return 0.0;
     }
 
-    public void setPrecio(double precio) {
+    public void setPrecio(Object precio) {
         this.precio = precio;
     }
 

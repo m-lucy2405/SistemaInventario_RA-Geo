@@ -43,6 +43,11 @@
             android:value="required"
             tools:replace="android:value" />
 
+        <!-- API Key para Google Maps -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyC8yLhFlbl5_-AJqjPBBEMsoLBmAfSxxAM" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">

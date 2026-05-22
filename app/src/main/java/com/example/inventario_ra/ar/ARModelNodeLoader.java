@@ -19,16 +19,18 @@ public class ARModelNodeLoader {
             return;
         }
 
+        // loadModelGlbAsync: Descarga y renderiza el modelo en segundo plano (Asíncrono).
         modelNode.loadModelGlbAsync(
-                url,
-                true,
-                0.3f,
-                null,
+                url,            // URL remota del archivo .glb (optimizado para RA).
+                true,           // autoAnimate: Reproduce automáticamente animaciones si el modelo las tiene.
+                0.3f,           // scaleUnits: Escala del modelo. 1.0f = tamaño real (metros). 0.3f = 30cm aprox.
+                null,           // centerOrigin: Alineación del modelo respecto a su anclaje.
                 error -> {
                     if (callback != null) callback.onError(error);
                     return Unit.INSTANCE;
                 },
                 modelInstance -> {
+                    // El modelo se hace visible solo cuando la GPU ha terminado de procesar sus mallas.
                     modelNode.setVisible(true);
                     if (callback != null) callback.onSuccess();
                     return Unit.INSTANCE;

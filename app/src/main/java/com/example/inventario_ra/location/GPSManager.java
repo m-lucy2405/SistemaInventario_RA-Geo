@@ -66,6 +66,8 @@ public class GPSManager {
         }
 
         // 3. Solicitud de ubicación actual con Google Play Services
+        // PRIORITY_HIGH_ACCURACY: Solicita la ubicación más precisa posible (GPS + Wi-Fi + Torres).
+        // Es esencial para logística de almacén donde unos pocos metros de diferencia importan.
         fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
                 .addOnSuccessListener(location -> {
                     if (location != null) {
@@ -90,6 +92,9 @@ public class GPSManager {
             return false;
         }
 
+        // distanceBetween: Utiliza la fórmula de Haversine para calcular la distancia 
+        // sobre la curvatura de la tierra (geodésica). 
+        // El resultado se devuelve en metros en el índice [0] del array.
         float[] distance = new float[1];
         Location.distanceBetween(
                 ubicacionActual.getLatitude(),
@@ -99,7 +104,7 @@ public class GPSManager {
                 distance
         );
 
-        // Comparamos la distancia calculada contra el radio definido en la sucursal
+        // Geofencing: Comparamos la distancia real contra el radio de tolerancia de la sucursal.
         return distance[0] <= sucursal.getRadio_metros();
     }
 }

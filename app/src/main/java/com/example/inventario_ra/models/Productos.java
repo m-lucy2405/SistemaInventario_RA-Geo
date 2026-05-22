@@ -64,6 +64,8 @@ public class Productos {
     }
 
     public double getPrecio() {
+        // Firebase es flexible: un número puede guardarse como String o como Number.
+        // Validamos el tipo para evitar errores de fundición (ClassCastException) en tiempo de ejecución.
         if (precio instanceof String) {
             try {
                 return Double.parseDouble((String) precio);

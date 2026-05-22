@@ -144,6 +144,7 @@ public class AgregarProductoFragment extends Fragment {
                 productoAEditar = snapshot.getValue(Productos.class);
                 if (productoAEditar != null && isAdded()) {
                     binding.etNombre.setText(productoAEditar.getNombre());
+                    binding.etCategoria.setText(productoAEditar.getCategoria());
                     binding.etDescripcion.setText(productoAEditar.getDescripcion());
                     binding.etPrecio.setText(String.valueOf(productoAEditar.getPrecio()));
                     binding.etStock.setText(String.valueOf(productoAEditar.getStock()));
@@ -249,6 +250,7 @@ public class AgregarProductoFragment extends Fragment {
     }
 
     private void guardarEnDatabase(String nombre, String precioStr, String stockStr, String urlImagen, String urlModelo) {
+        String categoria = binding.etCategoria.getText().toString().trim();
         String descripcion = binding.etDescripcion.getText().toString().trim();
         String ubicacionInterna = binding.etUbicacionInterna.getText().toString().trim();
         double precio = Double.parseDouble(precioStr);
@@ -265,7 +267,7 @@ public class AgregarProductoFragment extends Fragment {
             finalId = String.format(Locale.getDefault(), "prod_ferr_%04d", randomNum);
         }
 
-        Productos producto = new Productos(nombre, "", descripcion, precio, stock, urlImagen, urlModelo, ubicacionInterna, sucursalId);
+        Productos producto = new Productos(nombre, categoria, descripcion, precio, stock, urlImagen, urlModelo, ubicacionInterna, sucursalId);
         producto.setId(finalId);
 
         if (finalId != null) {

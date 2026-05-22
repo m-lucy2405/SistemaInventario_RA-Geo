@@ -27,7 +27,9 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -87,11 +89,51 @@ public class SucursalesFragment extends Fragment implements OnMapReadyCallback {
         // Habilitar ubicación en tiempo real (Puntero Azul)
         activarUbicacionRealTime();
         
+        // Listener para clics en la ventana de información (Para Editar/Eliminar)
+        mMap.setOnInfoWindowClickListener(marker -> {
+            Sucursales sucursal = (Sucursales) marker.getTag();
+            if (sucursal != null) {
+                mostrarOpcionesSucursal(sucursal);
+            }
+        });
+        
         // Posicionar cámara inicialmente en el centro de El Salvador
         LatLng centroES = new LatLng(13.7942, -88.8965);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(centroES, 8.5f));
 
         cargarSucursalesEnMapa();
+    }
+
+    private void mostrarOpcionesSucursal(Sucursales sucursal) {
+        String[] opciones = {"Editar Detalles", "Eliminar Sucursal"};
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(sucursal.getNombre())
+                .setItems(opciones, (dialog, which) -> {
+                    if (which == 0) {
+                        // Navegar a Editar Sucursal
+                        Bundle bundle = new Bundle();
+                        bundle.putString("SUCURSAL_ID_EDITAR", sucursal.getId());
+                        Navigation.findNavController(requireView()).navigate(R.id.action_sucursales_to_agregar_sucursal, bundle);
+                    } else {
+                        // Confirmar Eliminación
+                        confirmarEliminacionSucursal(sucursal);
+                    }
+                })
+                .show();
+    }
+
+    private void confirmarEliminacionSucursal(Sucursales sucursal) {
+        new MaterialAlertDialogBuilder(requireContext(), com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog_Centered)
+                .setTitle("Eliminar Sucursal")
+                .setMessage("¿Estás seguro de que deseas eliminar '" + sucursal.getNombre() + "'? Se perderán las geocercas asociadas.")
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setPositiveButton("Eliminar", (dialog, which) -> {
+                    mDatabase.child(sucursal.getId()).removeValue()
+                            .addOnSuccessListener(aVoid -> Toast.makeText(requireContext(), "Sucursal eliminada", Toast.LENGTH_SHORT).show())
+                            .addOnFailureListener(e -> Toast.makeText(requireContext(), "Error al eliminar", Toast.LENGTH_SHORT).show());
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
     }
 
     private void activarUbicacionRealTime() {
@@ -117,10 +159,12 @@ public class SucursalesFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private void cargarSucursalesEnMapa() {
-        mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+        mDatabase.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (!isAdded()) return;
+                if (!isAdded() || mMap == null) return;
+
+                mMap.clear(); // Limpiar mapa para redibujar todo en tiempo real
 
                 for (DataSnapshot data : snapshot.getChildren()) {
                     Sucursales sucursal = data.getValue(Sucursales.class);
@@ -128,16 +172,21 @@ public class SucursalesFragment extends Fragment implements OnMapReadyCallback {
                         LatLng posicion = new LatLng(sucursal.getLatitud(), sucursal.getLongitud());
                         
                         // Añadir marcador
-                        mMap.addMarker(new MarkerOptions()
+                        Marker marker = mMap.addMarker(new MarkerOptions()
                                 .position(posicion)
-                                .title(sucursal.getNombre()));
+                                .title(sucursal.getNombre())
+                                .snippet("Toca para gestionar"));
+                        
+                        if (marker != null) {
+                            marker.setTag(sucursal); // Guardamos el objeto para recuperarlo en el clic
+                        }
 
-                        // Añadir círculo de radio (Visualización del alcance GPS)
+                        // Añadir círculo de radio
                         mMap.addCircle(new CircleOptions()
                                 .center(posicion)
                                 .radius(sucursal.getRadio_metros())
                                 .strokeColor(Color.BLUE)
-                                .fillColor(0x220000FF) // Azul semitransparente
+                                .fillColor(0x220000FF)
                                 .strokeWidth(2));
                     }
                 }

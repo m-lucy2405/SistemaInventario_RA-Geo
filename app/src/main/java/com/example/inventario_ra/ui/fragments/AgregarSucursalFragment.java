@@ -89,14 +89,29 @@ public class AgregarSucursalFragment extends Fragment implements OnMapReadyCallb
         LatLng centroES = new LatLng(13.7942, -88.8965);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(centroES, 8.5f));
 
+        // Si es edición y los datos ya se cargaron antes de que el mapa estuviera listo
+        String latStr = binding.etLatitud.getText().toString();
+        String lonStr = binding.etLongitud.getText().toString();
+        if (!latStr.isEmpty() && !lonStr.isEmpty()) {
+            try {
+                double lat = Double.parseDouble(latStr);
+                double lon = Double.parseDouble(lonStr);
+                LatLng pos = new LatLng(lat, lon);
+                if (markerSeleccion != null) markerSeleccion.remove();
+                markerSeleccion = mMap.addMarker(new MarkerOptions().position(pos).title("Ubicación Actual"));
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(pos, 15f));
+            } catch (Exception ignored) {}
+        }
+
         // Listener de clic en mapa para capturar coordenadas
         mMap.setOnMapClickListener(latLng -> {
             if (markerSeleccion != null) {
                 markerSeleccion.remove();
             }
+            // MarkerOptions: Permite definir la posición visual del pin en el mapa.
             markerSeleccion = mMap.addMarker(new MarkerOptions().position(latLng).title("Nueva Ubicación"));
             
-            // Auto-poblar los campos
+            // Auto-poblar los campos: Facilitamos la UX al capturar las coordenadas exactas del clic.
             binding.etLatitud.setText(String.format(Locale.US, "%.6f", latLng.latitude));
             binding.etLongitud.setText(String.format(Locale.US, "%.6f", latLng.longitude));
         });
@@ -107,22 +122,25 @@ public class AgregarSucursalFragment extends Fragment implements OnMapReadyCallb
         mDatabase.child(idEditar).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (!isAdded()) return;
+                if (!isAdded() || binding == null) return;
                 binding.progressBar.setVisibility(View.GONE);
+                
                 Sucursales sucursal = snapshot.getValue(Sucursales.class);
                 if (sucursal != null) {
+                    // Llenado meticuloso con formato regional de alta precisión
                     binding.etNombreSucursal.setText(sucursal.getNombre());
                     binding.etDescripcionSucursal.setText(sucursal.getDescripcion());
-                    binding.etLatitud.setText(String.valueOf(sucursal.getLatitud()));
-                    binding.etLongitud.setText(String.valueOf(sucursal.getLongitud()));
+                    
+                    // Forzamos Locale.US para asegurar que el punto decimal sea el separador en la UI
+                    binding.etLatitud.setText(String.format(Locale.US, "%.6f", sucursal.getLatitud()));
+                    binding.etLongitud.setText(String.format(Locale.US, "%.6f", sucursal.getLongitud()));
+                    
                     binding.etRadio.setText(String.valueOf(sucursal.getRadio_metros()));
 
-                    // Si el mapa ya está listo, poner el marcador inicial
+                    // Sincronización con el mapa (si ya está listo)
                     if (mMap != null) {
                         LatLng pos = new LatLng(sucursal.getLatitud(), sucursal.getLongitud());
-                        if (markerSeleccion != null) markerSeleccion.remove();
-                        markerSeleccion = mMap.addMarker(new MarkerOptions().position(pos).title(sucursal.getNombre()));
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(pos, 15f));
+                        actualizarMarcadorEnMapa(pos, sucursal.getNombre());
                     }
                 }
             }
@@ -135,6 +153,14 @@ public class AgregarSucursalFragment extends Fragment implements OnMapReadyCallb
                 }
             }
         });
+    }
+
+    private void actualizarMarcadorEnMapa(LatLng pos, String titulo) {
+        if (markerSeleccion != null) markerSeleccion.remove();
+        markerSeleccion = mMap.addMarker(new MarkerOptions()
+                .position(pos)
+                .title(titulo != null ? titulo : "Ubicación Actual"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(pos, 15f));
     }
 
     private void validarYGuardar() {
@@ -168,7 +194,9 @@ public class AgregarSucursalFragment extends Fragment implements OnMapReadyCallb
         if (esEdicion) {
             idFinal = idEditar;
         } else {
-            // Sanitizar el nombre: minúsculas, sin espacios (reemplazar por _) y quitar caracteres especiales
+            // Sanitización del ID: Convertimos el nombre legible a un ID técnico para Firebase.
+            // Ejemplo: "Sucursal Central" -> "sucursal_sucursal_central"
+            // Esto permite que las URLs de la base de datos sean predecibles y limpias.
             String nombreLimpio = nombre.toLowerCase(Locale.getDefault())
                     .replaceAll("\\s+", "_")
                     .replaceAll("[^a-z0-9_]", "");

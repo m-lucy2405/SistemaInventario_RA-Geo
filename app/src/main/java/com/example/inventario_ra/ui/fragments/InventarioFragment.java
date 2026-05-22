@@ -155,18 +155,21 @@ public class InventarioFragment extends Fragment {
 
                 Sucursales sucursalActual = null;
 
+                // Lógica de Validación de Proximidad:
+                // Recorremos las sucursales para encontrar cuál contiene nuestra ubicación actual.
                 for (DataSnapshot data : snapshot.getChildren()) {
                     Sucursales s = data.getValue(Sucursales.class);
                     if (s != null) {
                         s.setId(data.getKey());
                         if (gpsManager.estaEnRango(miUbicacion, s)) {
                             sucursalActual = s;
-                            break;
+                            break; // Se detiene en la primera sucursal encontrada
                         }
                     }
                 }
 
                 if (sucursalActual != null) {
+                    // Carga Contextual: Solo mostramos productos que pertenecen físicamente a este lugar.
                     cargarProductosDeSucursal(sucursalActual.getId());
                     binding.tvTitulo.setText("Catálogo - " + sucursalActual.getNombre());
                 } else {
@@ -186,6 +189,8 @@ public class InventarioFragment extends Fragment {
             productosQuery.removeEventListener(productosListener);
         }
 
+        // Query Filtrada: Firebase Realtime DB permite filtrar por un hijo específico (sucursal_id).
+        // Esto optimiza el tráfico de red, descargando solo lo necesario para la ubicación actual.
         productosQuery = mDatabase.child("productos").orderByChild("sucursal_id").equalTo(sucursalId);
         productosListener = new ValueEventListener() {
             @Override

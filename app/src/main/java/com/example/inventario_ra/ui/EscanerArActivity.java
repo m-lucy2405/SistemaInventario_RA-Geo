@@ -63,6 +63,8 @@ public class EscanerArActivity extends AppCompatActivity {
         binding.arSceneView.getPlaneRenderer().setVisible(false);
 
         binding.arSceneView.configureSession((session, config) -> {
+            // AugmentedImageDatabase: Base de datos en memoria optimizada para búsqueda de patrones visuales.
+            // Permite que la cámara detecte imágenes de referencia previamente cargadas.
             AugmentedImageDatabase aid = new AugmentedImageDatabase(session);
             
             try {
@@ -70,12 +72,15 @@ public class EscanerArActivity extends AppCompatActivity {
                 String[] files = getAssets().list("");
                 if (files != null) {
                     for (String fileName : files) {
-                        // Filtrar solo imágenes compatibles
+                        // Solo cargamos JPG/PNG. El nombre del archivo (ej. prod_001.png) 
+                        // se convierte en la CLAVE de búsqueda en Firebase (ID Semántico).
                         if (fileName.toLowerCase().endsWith(".jpg") || fileName.toLowerCase().endsWith(".png")) {
                             try (InputStream is = getAssets().open(fileName)) {
                                 Bitmap bitmap = BitmapFactory.decodeStream(is);
-                                aid.addImage(fileName, bitmap);
-                                Log.d("AR_SCANNER", "Marcador cargado dinámicamente: " + fileName);
+                                // Especificar el ancho físico (ej. 0.1f = 10cm) mejora drásticamente 
+                                // la estabilidad y la escala inicial del modelo 3D.
+                                aid.addImage(fileName, bitmap, 0.1f); 
+                                Log.d("AR_SCANNER", "Marcador cargado dinámicamente con escala: " + fileName);
                             } catch (IOException e) {
                                 Log.e("AR_SCANNER", "Error abriendo asset: " + fileName);
                             }
@@ -87,6 +92,8 @@ public class EscanerArActivity extends AppCompatActivity {
             }
 
             config.setAugmentedImageDatabase(aid);
+            // FocusMode.AUTO: Crucial para el escaneo; permite que la cámara enfoque 
+            // marcadores pequeños o texturizados.
             config.setFocusMode(Config.FocusMode.AUTO);
             return Unit.INSTANCE;
         });
@@ -101,15 +108,18 @@ public class EscanerArActivity extends AppCompatActivity {
             
             actualizarDebugStatus("Marcador: " + fileName + " [" + state + "]");
 
+            // TRACKING: Significa que ARCore ha identificado la imagen y conoce su pose real.
+            // Si el estado es PAUSED o STOPPED, el anclaje no sería preciso.
             if (state == TrackingState.TRACKING) {
-                // Extraer el ID semántico (quitar extensión)
+                // Extraer el ID semántico (quitar extensión). 
+                // Ejemplo: "taladro.png" -> "taladro"
                 String productoId = fileName;
                 int dotIndex = fileName.lastIndexOf('.');
                 if (dotIndex > 0) {
                     productoId = fileName.substring(0, dotIndex);
                 }
 
-                // Control de redundancia: consultar solo si no ha sido procesado
+                // Control de redundancia: Evita múltiples consultas a Firebase para el mismo objeto detectado.
                 if (!productosProcesados.contains(productoId)) {
                     actualizarDebugStatus("Detectado: " + productoId + ". Consultando Firebase...");
                     productosProcesados.add(productoId);
@@ -131,7 +141,8 @@ public class EscanerArActivity extends AppCompatActivity {
     private void buscarProductoYAnclar(AugmentedImage image, String productoId) {
         binding.progressBar.setVisibility(View.VISIBLE);
 
-        // Consulta Directa O(1) usando el ID Semántico
+        // Consulta Directa O(1): Al usar el nombre de la imagen como clave del nodo en Realtime DB,
+        // no necesitamos hacer una búsqueda (query) en toda la base, sino una ruta directa.
         mDatabase.child(productoId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {

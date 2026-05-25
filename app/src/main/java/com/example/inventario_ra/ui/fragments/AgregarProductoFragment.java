@@ -29,9 +29,11 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 
 public class AgregarProductoFragment extends Fragment {
@@ -98,10 +100,37 @@ public class AgregarProductoFragment extends Fragment {
         }
 
         cargarSucursales();
+        cargarCategorias();
 
         binding.btnSeleccionarImagen.setOnClickListener(v -> seleccionarImagen());
         binding.btnSeleccionarModelo.setOnClickListener(v -> seleccionarModelo());
         binding.btnGuardar.setOnClickListener(v -> validarYSubir());
+    }
+
+    private void cargarCategorias() {
+        mDatabase.child("productos").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Set<String> categoriasSet = new HashSet<>();
+                for (DataSnapshot data : snapshot.getChildren()) {
+                    Productos prod = data.getValue(Productos.class);
+                    if (prod != null && prod.getCategoria() != null && !prod.getCategoria().isEmpty()) {
+                        categoriasSet.add(prod.getCategoria());
+                    }
+                }
+                if (isAdded()) {
+                    List<String> categorias = new ArrayList<>(categoriasSet);
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
+                            android.R.layout.simple_dropdown_item_1line, categorias);
+                    binding.etCategoria.setAdapter(adapter);
+                    // Permitir que el usuario siga escribiendo para nuevas categorías
+                    binding.etCategoria.setThreshold(1);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
     }
 
     private void cargarSucursales() {

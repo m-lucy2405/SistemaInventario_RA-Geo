@@ -1,26 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Paleta Ferretera (Safety Orange & Steel) -->
-    <color name="primary">#E64A19</color> <!-- Naranja Industrial -->
+    <!-- Professional Palette (Deep Slate & Premium Gold) -->
+
+    <!-- Core Brand Colors (Light Mode) -->
+    <color name="primary">#2D3436</color> <!-- Deep Slate -->
     <color name="on_primary">#FFFFFF</color>
-    <color name="primary_container">#FFCCBC</color>
+    <color name="primary_container">#DFE6E9</color>
+    <color name="on_primary_container">#2D3436</color>
 
-    <color name="secondary">#263238</color> <!-- Gris Acero Obscuro -->
-    <color name="on_secondary">#FFFFFF</color>
+    <color name="secondary">#FF9F43</color> <!-- Industrial Gold / Amber -->
+    <color name="on_secondary">#000000</color>
+    <color name="secondary_container">#FFEAA7</color>
+    <color name="on_secondary_container">#A0522D</color>
 
-    <color name="tertiary">#FFA000</color> <!-- Amarillo de Construcción -->
+    <color name="tertiary">#636E72</color> <!-- Cool Gray -->
 
-    <!-- Fondos y Superficies -->
-    <color name="background_app">#ECEFF1</color>
+    <!-- Surfaces & Backgrounds (Light Mode) -->
+    <color name="background_app">#F5F6FA</color>
     <color name="surface">#FFFFFF</color>
-    <color name="on_surface">#212121</color>
-    <color name="surface_variant">#CFD8DC</color>
+    <color name="on_surface">#2D3436</color>
+    <color name="surface_variant">#E1E8ED</color>
+    <color name="on_surface_variant">#636E72</color>
 
-    <!-- Estados -->
-    <color name="error">#D32F2F</color>
-    <color name="success">#388E3C</color>
+    <!-- Core Brand Colors (Dark Mode Overrides) -->
+    <color name="primary_dark">#1E1E1E</color>
+    <color name="on_primary_dark">#ECEFF1</color>
+    <color name="secondary_dark">#FFAB40</color>
+    <color name="background_dark">#121212</color>
+    <color name="surface_dark">#1E1E1E</color>
+    <color name="on_surface_dark">#F5F6FA</color>
 
-    <!-- Legacy compatible naming para el sistema -->
+    <!-- Utility Colors -->
+    <color name="error">#FF5252</color>
+    <color name="success">#00B894</color>
+    <color name="warning">#FDCB6E</color>
+
+    <!-- Legacy / Semantic Aliases -->
     <color name="md_theme_primary">@color/primary</color>
     <color name="md_theme_onPrimary">@color/on_primary</color>
     <color name="md_theme_background">@color/background_app</color>

@@ -4,32 +4,44 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_app"
+    android:background="?attr/android:windowBackground"
+    android:fillViewport="true"
     tools:context=".ui.fragments.AgregarSucursalFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="24dp">
 
         <TextView
             android:id="@+id/tvTituloSucursal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Registrar Sucursal"
-            android:textSize="22sp"
+            android:text="Nueva Sucursal"
+            android:textSize="28sp"
+            android:fontFamily="sans-serif-condensed-medium"
             android:textStyle="bold"
-            android:textColor="@color/primary"
-            android:layout_marginBottom="24dp"
+            android:textColor="?attr/colorOnSurface"
+            android:layout_marginBottom="8dp"
             android:textAlignment="center"/>
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Completa la información para el registro geográfico"
+            android:textSize="14sp"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textAlignment="center"
+            android:layout_marginBottom="32dp"/>
+
         <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            style="?attr/textInputStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Nombre de la Sucursal"
-            android:layout_marginBottom="12dp">
+            app:startIconDrawable="@android:drawable/ic_menu_edit"
+            android:layout_marginBottom="16dp">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etNombreSucursal"
                 android:layout_width="match_parent"
@@ -38,67 +50,105 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            style="?attr/textInputStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Descripción de la Sucursal"
-            android:layout_marginBottom="16dp">
+            android:hint="Descripción detallada"
+            android:layout_marginBottom="24dp">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etDescripcionSucursal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textMultiLine"
-                android:lines="2" />
+                android:gravity="top"
+                android:minLines="3" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <TextView
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Toca el mapa para ubicar la sucursal:"
-            android:textSize="14sp"
-            android:layout_marginBottom="8dp"
-            android:textColor="@color/secondary"/>
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="?attr/colorSurfaceVariant"
+            android:layout_marginBottom="24dp">
 
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/map_pick"
-            android:name="com.google.android.gms.maps.SupportMapFragment"
-            android:layout_width="match_parent"
-            android:layout_height="250dp"
-            android:layout_marginBottom="16dp"
-            tools:layout="@android:layout/simple_gallery_item" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Latitud"
-            android:layout_marginBottom="12dp">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etLatitud"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="numberSigned|numberDecimal" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:orientation="vertical">
 
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Ubicación en el Mapa"
+                    android:padding="12dp"
+                    android:background="?attr/colorSurfaceVariant"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textAllCaps="true"/>
+
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/map_pick"
+                    android:name="com.google.android.gms.maps.SupportMapFragment"
+                    android:layout_width="match_parent"
+                    android:layout_height="220dp"
+                    tools:layout="@android:layout/simple_gallery_item" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Toca el mapa para fijar las coordenadas"
+                    android:padding="8dp"
+                    android:gravity="center"
+                    android:textSize="11sp"
+                    android:textColor="?attr/colorSecondary" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Longitud"
-            android:layout_marginBottom="12dp">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etLongitud"
-                android:layout_width="match_parent"
+            android:orientation="horizontal"
+            android:baselineAligned="false"
+            android:layout_marginBottom="16dp">
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="?attr/textInputStyle"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:inputType="numberSigned|numberDecimal" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:hint="Latitud">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etLatitud"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberSigned|numberDecimal" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="?attr/textInputStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Longitud">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etLongitud"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberSigned|numberDecimal" />
+            </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
 
         <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            style="?attr/textInputStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Radio de Cobertura (Metros)"
-            android:layout_marginBottom="24dp">
+            app:startIconDrawable="@android:drawable/ic_menu_mylocation"
+            android:layout_marginBottom="32dp">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etRadio"
                 android:layout_width="match_parent"
@@ -108,10 +158,13 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnGuardarSucursal"
+            style="?attr/materialButtonStyle"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="Guardar Sucursal"
-            app:cornerRadius="8dp" />
+            android:layout_height="64dp"
+            android:text="Finalizar Registro"
+            android:textSize="16sp"
+            app:icon="@android:drawable/ic_menu_save"
+            app:iconGravity="textStart" />
 
         <ProgressBar
             android:id="@+id/progressBar"

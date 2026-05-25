@@ -2,14 +2,19 @@ package com.example.inventario_ra.ui;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.CustomTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.example.inventario_ra.ar.ARModelNodeLoader;
 import com.example.inventario_ra.databinding.ActivityEscanerArBinding;
 import com.example.inventario_ra.models.Productos;
@@ -17,6 +22,7 @@ import com.google.ar.core.Anchor;
 import com.google.ar.core.AugmentedImage;
 import com.google.ar.core.AugmentedImageDatabase;
 import com.google.ar.core.Config;
+import com.google.ar.core.exceptions.ImageInsufficientQualityException;
 import com.google.ar.core.TrackingState;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -43,6 +49,10 @@ public class EscanerArActivity extends AppCompatActivity {
     private ActivityEscanerArBinding binding;
     private DatabaseReference mDatabase;
     private Set<String> productosProcesados;
+    private AugmentedImageDatabase aid;
+    private int marcadoresCargados = 0;
+    private int totalProductos = 0;
+    private int descargasFinalizadas = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,76 +64,135 @@ public class EscanerArActivity extends AppCompatActivity {
         productosProcesados = new HashSet<>();
 
         configurarEscenaEscaner();
+    }
 
-        // Listener de cada frame para rastreo de imágenes
-        binding.arSceneView.setOnArFrame(this::procesarFrame);
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Asegurar que el listener esté activo cada vez que la actividad vuelve al primer plano
+        if (binding != null && binding.arSceneView != null) {
+            binding.arSceneView.setOnArFrame(this::procesarFrame);
+        }
     }
 
     private void configurarEscenaEscaner() {
         binding.arSceneView.getPlaneRenderer().setVisible(false);
 
         binding.arSceneView.configureSession((session, config) -> {
-            // AugmentedImageDatabase: Base de datos en memoria optimizada para búsqueda de patrones visuales.
-            // Permite que la cámara detecte imágenes de referencia previamente cargadas.
-            AugmentedImageDatabase aid = new AugmentedImageDatabase(session);
-            
-            try {
-                // Listar dinámicamente todos los archivos en assets
-                String[] files = getAssets().list("");
-                if (files != null) {
-                    for (String fileName : files) {
-                        // Solo cargamos JPG/PNG. El nombre del archivo (ej. prod_001.png) 
-                        // se convierte en la CLAVE de búsqueda en Firebase (ID Semántico).
-                        if (fileName.toLowerCase().endsWith(".jpg") || fileName.toLowerCase().endsWith(".png")) {
-                            try (InputStream is = getAssets().open(fileName)) {
-                                Bitmap bitmap = BitmapFactory.decodeStream(is);
-                                // Especificar el ancho físico (ej. 0.1f = 10cm) mejora drásticamente 
-                                // la estabilidad y la escala inicial del modelo 3D.
-                                aid.addImage(fileName, bitmap, 0.1f); 
-                                Log.d("AR_SCANNER", "Marcador cargado dinámicamente con escala: " + fileName);
-                            } catch (IOException e) {
-                                Log.e("AR_SCANNER", "Error abriendo asset: " + fileName);
-                            }
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                Log.e("AR_SCANNER", "Error listando assets", e);
-            }
-
+            // Inicializar base de datos vacía vinculada a la sesión
+            aid = new AugmentedImageDatabase(session);
             config.setAugmentedImageDatabase(aid);
-            // FocusMode.AUTO: Crucial para el escaneo; permite que la cámara enfoque 
-            // marcadores pequeños o texturizados.
             config.setFocusMode(Config.FocusMode.AUTO);
             return Unit.INSTANCE;
         });
+
+        // Iniciar descarga dinámica desde la nube
+        descargarMarcadoresDesdeFirebase();
+    }
+
+    private void descargarMarcadoresDesdeFirebase() {
+        actualizarDebugStatus("Sincronizando base de datos de marcadores...");
+        
+        mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    totalProductos = (int) snapshot.getChildrenCount();
+                    descargasFinalizadas = 0;
+                    marcadoresCargados = 0;
+                    
+                    if (totalProductos == 0) {
+                        actualizarDebugStatus("No hay productos en la base de datos.");
+                        return;
+                    }
+
+                    for (DataSnapshot data : snapshot.getChildren()) {
+                        Productos producto = data.getValue(Productos.class);
+                        if (producto != null && producto.getImagen_ref_url() != null) {
+                            String productId = data.getKey();
+                            descargarBitmapEInyectar(productId, producto.getImagen_ref_url());
+                        } else {
+                            verificarYFinalizarCarga();
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                actualizarDebugStatus("Error al sincronizar: " + error.getMessage());
+            }
+        });
+    }
+
+    private void descargarBitmapEInyectar(String productId, String url) {
+        Glide.with(this)
+                .asBitmap()
+                .load(url)
+                .into(new CustomTarget<Bitmap>() {
+                    @Override
+                    public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                        if (aid != null) {
+                            try {
+                                aid.addImage(productId, resource, 0.1f);
+                                marcadoresCargados++;
+                            } catch (ImageInsufficientQualityException e) {
+                                Log.e("AR_SCANNER", "Baja calidad: " + productId);
+                            } catch (Exception e) {
+                                Log.e("AR_SCANNER", "Error: " + e.getMessage());
+                            }
+                        }
+                        verificarYFinalizarCarga();
+                    }
+
+                    @Override
+                    public void onLoadCleared(@Nullable Drawable placeholder) { }
+
+                    @Override
+                    public void onLoadFailed(@Nullable Drawable errorDrawable) {
+                        Log.e("AR_SCANNER", "Fallo descarga: " + productId);
+                        verificarYFinalizarCarga();
+                    }
+                });
+    }
+
+    private void verificarYFinalizarCarga() {
+        descargasFinalizadas++;
+        actualizarDebugStatus("Sincronizando: " + descargasFinalizadas + "/" + totalProductos);
+
+        if (descargasFinalizadas >= totalProductos) {
+            // UNA SOLA ACTUALIZACIÓN DE SESIÓN AL FINAL
+            binding.arSceneView.configureSession((session, config) -> {
+                config.setAugmentedImageDatabase(aid);
+                config.setFocusMode(Config.FocusMode.AUTO);
+                config.setUpdateMode(Config.UpdateMode.LATEST_CAMERA_IMAGE);
+                // Importante: Asegurar que el reconocimiento esté habilitado en la configuración
+                return Unit.INSTANCE;
+            });
+            
+            // Forzar el registro del listener después de configurar la sesión
+            binding.arSceneView.setOnArFrame(this::procesarFrame);
+            
+            actualizarDebugStatus("Escáner Listo. " + marcadoresCargados + " marcadores activos.");
+            Log.i("AR_SCANNER", "Sincronización finalizada. Marcadores: " + marcadoresCargados);
+        }
     }
 
     private Unit procesarFrame(ArFrame arFrame) {
         Collection<AugmentedImage> updatedImages = arFrame.getFrame().getUpdatedTrackables(AugmentedImage.class);
 
         for (AugmentedImage image : updatedImages) {
-            String fileName = image.getName();
+            String productId = image.getName();
             TrackingState state = image.getTrackingState();
             
-            actualizarDebugStatus("Marcador: " + fileName + " [" + state + "]");
+            Log.d("AR_TRACKING", "Imagen: " + productId + " | Estado: " + state);
 
-            // TRACKING: Significa que ARCore ha identificado la imagen y conoce su pose real.
-            // Si el estado es PAUSED o STOPPED, el anclaje no sería preciso.
             if (state == TrackingState.TRACKING) {
-                // Extraer el ID semántico (quitar extensión). 
-                // Ejemplo: "taladro.png" -> "taladro"
-                String productoId = fileName;
-                int dotIndex = fileName.lastIndexOf('.');
-                if (dotIndex > 0) {
-                    productoId = fileName.substring(0, dotIndex);
-                }
-
-                // Control de redundancia: Evita múltiples consultas a Firebase para el mismo objeto detectado.
-                if (!productosProcesados.contains(productoId)) {
-                    actualizarDebugStatus("Detectado: " + productoId + ". Consultando Firebase...");
-                    productosProcesados.add(productoId);
-                    buscarProductoYAnclar(image, productoId);
+                if (!productosProcesados.contains(productId)) {
+                    Log.i("AR_TRACKING", "¡IMAGEN RECONOCIDA!: " + productId);
+                    actualizarDebugStatus("Detectado: " + productId + ". Consultando Firebase...");
+                    productosProcesados.add(productId);
+                    buscarProductoYAnclar(image, productId);
                 }
             }
         }
@@ -173,29 +242,37 @@ public class EscanerArActivity extends AppCompatActivity {
     }
 
     private void crearNodoYAnclar(AugmentedImage image, Productos producto) {
+        Log.d("AR_RENDER", "Iniciando anclaje para: " + producto.getNombre());
+        
         ArModelNode modelNode = new ArModelNode(binding.arSceneView.getEngine());
         modelNode.setPlacementMode(PlacementMode.BEST_AVAILABLE);
         
+        // Importante: Usar el centro de la imagen detectada
         Anchor anchor = image.createAnchor(image.getCenterPose());
         modelNode.setAnchor(anchor);
         
+        // Ajuste de escala por si el modelo es muy pequeño/grande
+        modelNode.setScale(0.5f);
+        
         binding.arSceneView.addChild(modelNode);
+
+        Log.d("AR_RENDER", "Llamando a cargador de modelo: " + producto.getModelo_3d_url());
 
         ARModelNodeLoader.cargarModelo(modelNode, producto.getModelo_3d_url(), new ARModelNodeLoader.ARModelLoaderCallback() {
             @Override
             public void onSuccess() {
+                Log.i("AR_RENDER", "Modelo cargado exitosamente: " + producto.getNombre());
                 actualizarDebugStatus("Modelo de " + producto.getNombre() + " renderizado");
                 runOnUiThread(() -> 
-                    Toast.makeText(EscanerArActivity.this, "Detectado: " + producto.getNombre(), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(EscanerArActivity.this, "Detectado: " + producto.getNombre(), Toast.LENGTH_LONG).show()
                 );
             }
 
             @Override
             public void onError(Exception error) {
+                Log.e("AR_RENDER", "Error fatal cargando modelo: " + error.getMessage(), error);
                 actualizarDebugStatus("ERROR Renderizado: " + error.getMessage());
-                Log.e("AR_SCANNER", "Error cargando modelo de " + producto.getNombre());
                 binding.arSceneView.removeChild(modelNode);
-                // Permitir reintento si falla la carga del modelo 3D
                 productosProcesados.remove(producto.getId());
             }
         });
